@@ -4,7 +4,7 @@ import axios from "axios";
 const axiosConfig = axios.create({
 
     //địa chỉ đường dẫn của phía backend khi deloy
-    baseURL: "https://build-money-manager-web.onrender.com/api/v1.0",
+    baseURL: "https://finance-manager-backend-2.onrender.com/api/v1.0",
     headers:{
         "Content-Type": "application/json",
         Accept: "application/json"
@@ -18,7 +18,7 @@ const publicEndpoints = ["/login","/register","/status","/activate","/health"];
 //Yêu cầu chặn những request
 axiosConfig.interceptors.request.use((config) =>{
     const shouldSkipToken = publicEndpoints.some((endPoint) => {
-        config.url.includes(endPoint)
+        return config.url.includes(endPoint)
     });
     if(!shouldSkipToken){
         const accessToken = localStorage.getItem("token");

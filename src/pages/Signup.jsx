@@ -8,6 +8,8 @@ import axiosConfig from "../util/axiosConfig.jsx";
 import API_ENDPOINTS from "../util/apiEndpoints.js";
 import toast from "react-hot-toast";
 import { LoaderCircle } from "lucide-react";
+import ProfilePhotoSelector from "../components/ProfilePhotoSelector.jsx";
+import uploadProfileImage from "../util/uploadProfileImage.js";
 
 const Signup = () => {
     const [fullName,setFullName] = useState("");
@@ -15,11 +17,13 @@ const Signup = () => {
     const [password,setPassword] = useState("");
     const [error,setError] = useState(null);
     const [isLoading,setIsLoading] = useState(null);
+    const [profilePhoto,setProfilePhoto] = useState(null);
 
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        let profileImageUrl = "";
         setIsLoading(true);
 
         if(!fullName.trim()){
@@ -38,23 +42,42 @@ const Signup = () => {
             return;
         }
 
+
         setError("");
 
         //signup api call
         try {
+            if(profilePhoto){
+                const imageUrl = await uploadProfileImage(profilePhoto);
+                profileImageUrl = imageUrl || "";
+            }
             const response = await axiosConfig.post(API_ENDPOINTS.REGISTER,{
                 fullName,
                 email,
                 password,
+                profileImageUrl
             })
             if(response.status === 201){
                 toast.success("Profile created successfully. ");
                 navigate("/login");
             }
-        } catch (er) {
-            console.error("Something went wrong",er);
-            setError(er.message);
-        } finally{
+        } 
+        catch (er) {
+            console.error(er);
+
+            if (er.response) {
+                if (er.response.status === 403) {
+                    setError("Email already exists or signup is not allowed");
+                } else if (er.response.data?.message) {
+                    setError(er.response.data.message);
+                } else {
+                    setError("Signup failed");
+                }
+            } else {
+                setError("Network error, please try again");
+            }
+        }
+        finally{
             setIsLoading(false);
         }
     }
@@ -77,9 +100,10 @@ const Signup = () => {
                         Start tracking you spendings by joining with us.
                     </p>
 
+
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="flex justify-center mb-6">
-                     
+                            <ProfilePhotoSelector image = {profilePhoto} setImage={setProfilePhoto}/>
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-2 gap-4">

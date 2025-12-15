@@ -47,19 +47,32 @@ const Login = () => {
                 setUser(user);
                 navigate("/dashboard");
             }
-            // if(response.status === 201){
-            //     toast.success("Profile created successfully. ");
-            //     navigate("/login");
-            // }
+            if(response.status === 201){
+                toast.success("Profile created successfully. ");
+                navigate("/login");
+            }
             
         }
         catch (er) {
-            console.error("Something went wrong",er);
-            setError(er.message);
+            console.error(er);
+
+            if (er.response) {
+                if (er.response.status === 401 || er.response.status === 403) {
+                    setError("Email or password is invalid");
+                } else if (er.response.data?.message) {
+                    setError(er.response.data.message);
+                } else {
+                    setError("Login failed");
+                }
+            } 
+            else {
+                setError("Network error, please try again");
+            }
         } 
-        finally{
+        finally {
             setIsLoading(false);
         }
+
     }
     return (
         <div className="h-screen w-full relative flex items-center justify-center overflow-hidden">
@@ -79,7 +92,7 @@ const Login = () => {
                         Please enter your details to login in
                     </p>
 
-                    <form className="space-y-4">
+                    <form className="space-y-4" onSubmit={handleSubmit}>
                         <Input
                             value = {email}
                             onChange = {(e) => setEmail(e.target.value)}
